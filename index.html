@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phonics Fun: Short 'u' Words</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom animations for interactive feedback */
+        @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-5px); }
+            40%, 80% { transform: translateX(5px); }
+        }
+        .animate-pop { animation: pop 0.4s ease-out; }
+        .animate-shake { animation: shake 0.4s ease-out; }
+        .disabled-card { opacity: 0.6; pointer-events: none; }
+        .match-selected { border-color: #3b82f6 !important; background-color: #eff6ff !important; }
+        .match-correct { border-color: #22c55e !important; background-color: #dcfce7 !important; pointer-events: none; opacity: 0.7; }
+        .match-wrong { border-color: #ef4444 !important; background-color: #fee2e2 !important; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-100 via-indigo-50 to-purple-100 min-h-screen font-sans text-gray-800 select-none pb-12">
+
+    <!-- Header & Navigation -->
+    <header class="bg-white shadow-md rounded-b-3xl mx-auto max-w-5xl mb-8 p-4 md:p-6 border-b-4 border-indigo-500">
+        <h1 class="text-3xl md:text-5xl font-extrabold text-center text-indigo-700 mb-6 flex justify-center items-center gap-3">
+            <span class="bg-yellow-400 text-yellow-900 px-4 py-2 rounded-2xl shadow-sm rotate-[-3deg]">/u/</span>
+            Phonics Fun
+            <span class="bg-yellow-400 text-yellow-900 px-4 py-2 rounded-2xl shadow-sm rotate-[3deg]">/አ/</span>
+        </h1>
+        
+        <nav class="flex flex-wrap justify-center gap-2 md:gap-4">
+            <button onclick="App.setMode('flashcards')" id="nav-flashcards" class="nav-btn bg-indigo-100 hover:bg-indigo-200 text-indigo-800 font-bold py-2 px-4 rounded-xl border-2 border-indigo-300 transition-all">Flashcards</button>
+            <button onclick="App.setMode('listenMatch')" id="nav-listenMatch" class="nav-btn bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold py-2 px-4 rounded-xl border-2 border-blue-300 transition-all">Listen & Match</button>
+            <button onclick="App.setMode('readMatch')" id="nav-readMatch" class="nav-btn bg-green-100 hover:bg-green-200 text-green-800 font-bold py-2 px-4 rounded-xl border-2 border-green-300 transition-all">Find Word</button>
+            <button onclick="App.setMode('amharicMatch')" id="nav-amharicMatch" class="nav-btn bg-orange-100 hover:bg-orange-200 text-orange-800 font-bold py-2 px-4 rounded-xl border-2 border-orange-300 transition-all">Amharic Match</button>
+        </nav>
+    </header>
+
+    <!-- Main Game Container -->
+    <main id="game-container" class="max-w-5xl mx-auto px-4">
+        <!-- Dynamic Content Injected Here -->
+    </main>
+
+    <script>
+        // --- 1. Data Dictionary ---
+        // Exhaustive list from "Short_u_Words_Kids_Amharic_2.docx"
+        const vocabulary = [
+            { en: 'Cup', am: 'ኩባያ', pron: 'Kubaya' },
+            { en: 'Up', am: 'ወደ ላይ', pron: 'Wede lay' },
+            { en: 'Pup', am: 'ቡችላ', pron: 'Buchila' },
+            { en: 'Tub', am: 'ገንዳ', pron: 'Genda' },
+            { en: 'Rub', am: 'ማሸት', pron: 'Mashet' },
+            { en: 'Cub', am: 'የዱር እንስሳ ግልገል', pron: 'Yedur insisa gilgel' },
+            { en: 'Mud', am: 'ጭቃ', pron: 'Chika' },
+            { en: 'Bug', am: 'ነፍሳት', pron: 'Nefsat' },
+            { en: 'Hug', am: 'ማቀፍ', pron: 'Makef' },
+            { en: 'Jug', am: 'ማሰሮ / ጃግ', pron: 'Masero / Jag' },
+            { en: 'Mug', am: 'ማግ / ትልቅ ኩባያ', pron: 'Mag / Tilik kubaya' },
+            { en: 'Rug', am: 'ምንጣፍ', pron: 'Mintaf' },
+            { en: 'Tug', am: 'መጎተት', pron: 'Megotet' },
+            { en: 'Gum', am: 'ማስቲካ', pron: 'Mastika' },
+            { en: 'Hum', am: 'ማንጎራጎር', pron: 'Mangoragor' },
+            { en: 'Sum', am: 'ድምር', pron: 'Dimir' },
+            { en: 'Bun', am: 'ዳቦ', pron: 'Dabo' },
+            { en: 'Fun', am: 'መዝናናት / ጨዋታ', pron: 'Meznanat / Chewata' },
+            { en: 'Run', am: 'መሮጥ', pron: 'Merot' },
+            { en: 'Sun', am: 'ፀሐይ', pron: 'Tsehay' },
+            { en: 'Nut', am: 'ለውዝ', pron: 'Lewiz' },
+            { en: 'Cut', am: 'መቁረጥ', pron: 'Mekuret' },
+            { en: 'Hut', am: 'ጎጆ', pron: 'Gojo' },
+            { en: 'But', am: 'ግን', pron: 'Gin' },
+            { en: 'Bus', am: 'አውቶብስ', pron: 'Awtobis' },
+            { en: 'Duck', am: 'ዳክዬ', pron: 'Dakiye' },
+            { en: 'Luck', am: 'ዕድል', pron: 'Idil' },
+            { en: 'Jump', am: 'መዝለል', pron: 'Mezlel' },
+            { en: 'Bump', am: 'መጋጨት', pron: 'Megachet' },
+            { en: 'Dust', am: 'አቧራ', pron: 'Abwara' }
+        ].map(item => {
+            // Attach a reliable placeholder image URL based on the English word
+            return {
+                ...item,
+                img: `https://placehold.co/400x400/FFF8DC/333333?text=${item.en}`
+            };
+        });
+
+        // --- 2. Helper Functions ---
+        
+        // Audio synthesis function optimized for clear British Female Voice
+        const playAudio = (text) => {
+            if (!('speechSynthesis' in window)) {
+                console.warn('Web Speech API not supported in this browser.');
+                return;
+            }
+            // Cancel any ongoing speech
+            window.speechSynthesis.cancel();
+            
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 0.85; // slightly slower for kids
+            utterance.pitch = 1.2; // slightly higher pitch
+
+            const voices = window.speechSynthesis.getVoices();
+            // Try to find Google UK English Female, or any en-GB female, or fallback to en-GB
+            let targetVoice = voices.find(v => v.lang === 'en-GB' && v.name.includes('Female')) || 
+                              voices.find(v => v.name.includes('Google UK English Female')) ||
+                              voices.find(v => v.lang === 'en-GB' || v.lang === 'en_GB');
+            
+            if (targetVoice) {
+                utterance.voice = targetVoice;
+            }
+            window.speechSynthesis.speak(utterance);
+        };
+
+        // Utility: Get SVG for Audio Button
+        const getAudioIcon = (classes = "w-8 h-8") => `
+            <svg class="${classes} inline-block" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+            </svg>
+        `;
+
+        // Utility: Shuffle Array
+        const shuffle = (array) => {
+            let currentIndex = array.length, randomIndex;
+            while (currentIndex != 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        };
+
+        // --- 3. App State & Logic ---
+        const App = {
+            mode: '',
+            flashcardIndex: 0,
+            currentGameData: null,
+            
+            // State for Matching Mode
+            matchState: {
+                selectedEn: null,
+                selectedAm: null,
+                matchesLeft: 0
+            },
+
+            init() {
+                // Ensure voices load
+                if ('speechSynthesis' in window) {
+                    window.speechSynthesis.onvoiceschanged = () => {};
+                }
+                this.setMode('flashcards');
+            },
+
+            setMode(newMode) {
+                this.mode = newMode;
+                // Update Navigation Styling
+                document.querySelectorAll('.nav-btn').forEach(btn => {
+                    btn.classList.remove('ring-4', 'ring-offset-2', 'ring-indigo-400', 'scale-105');
+                });
+                const activeBtn = document.getElementById(`nav-${newMode}`);
+                if (activeBtn) {
+                    activeBtn.classList.add('ring-4', 'ring-offset-2', 'ring-indigo-400', 'scale-105');
+                }
+
+                const container = document.getElementById('game-container');
+                container.innerHTML = ''; // Clear current
+
+                switch(newMode) {
+                    case 'flashcards': this.renderFlashcards(container); break;
+                    case 'listenMatch': this.renderListenMatch(container); break;
+                    case 'readMatch': this.renderReadMatch(container); break;
+                    case 'amharicMatch': this.renderAmharicMatch(container); break;
+                }
+            },
+
+            // === MODE 1: FLASHCARDS ===
+            renderFlashcards(container) {
+                const word = vocabulary[this.flashcardIndex];
+                
+                container.innerHTML = `
+                    <div class="flex flex-col items-center animate-pop">
+                        <!-- Required Highlighted Phoneme Header -->
+                        <div class="bg-gradient-to-r from-yellow-300 to-yellow-500 border-4 border-white shadow-xl rounded-full px-8 py-3 mb-6 relative z-10 -bottom-4">
+                            <h2 class="text-4xl md:text-5xl font-black text-indigo-900 tracking-wider">
+                                /u/ &nbsp;&amp;&nbsp; /አ/
+                            </h2>
+                        </div>
+                        
+                        <!-- Flashcard Content -->
+                        <div class="bg-white p-6 md:p-10 rounded-3xl shadow-2xl w-full max-w-lg text-center border-8 border-indigo-100">
+                            <img src="${word.img}" alt="${word.en}" class="w-full h-64 object-cover rounded-2xl mb-6 shadow-inner border-2 border-gray-100">
+                            
+                            <div class="flex justify-center items-center gap-4 mb-4">
+                                <h3 class="text-5xl font-extrabold text-blue-600">${word.en}</h3>
+                                <button onclick="playAudio('${word.en}')" class="bg-blue-100 text-blue-600 hover:bg-blue-500 hover:text-white rounded-full p-3 transition-colors shadow-md">
+                                    ${getAudioIcon()}
+                                </button>
+                            </div>
+                            
+                            <div class="bg-orange-50 rounded-xl p-4 mt-6 border-2 border-orange-200">
+                                <h4 class="text-3xl font-bold text-orange-700 mb-2">${word.am}</h4>
+                                <p class="text-xl text-orange-600 italic">Pronunciation: ${word.pron}</p>
+                            </div>
+                        </div>
+
+                        <!-- Controls -->
+                        <div class="flex justify-between w-full max-w-lg mt-8">
+                            <button onclick="App.prevFlashcard()" class="bg-white hover:bg-gray-100 text-indigo-700 font-bold py-3 px-6 rounded-2xl shadow-lg border-2 border-indigo-200 text-xl transition-transform hover:scale-105 active:scale-95">
+                                &larr; Previous
+                            </button>
+                            <span class="text-xl font-bold text-indigo-900 self-center bg-white/50 px-4 py-1 rounded-full">${this.flashcardIndex + 1} / ${vocabulary.length}</span>
+                            <button onclick="App.nextFlashcard()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-2xl shadow-lg text-xl transition-transform hover:scale-105 active:scale-95">
+                                Next &rarr;
+                            </button>
+                        </div>
+                    </div>
+                `;
+            },
+            nextFlashcard() {
+                this.flashcardIndex = (this.flashcardIndex + 1) % vocabulary.length;
+                this.setMode('flashcards');
+            },
+            prevFlashcard() {
+                this.flashcardIndex = (this.flashcardIndex - 1 + vocabulary.length) % vocabulary.length;
+                this.setMode('flashcards');
+            },
+
+            // === MODE 2: LISTEN & MATCH IMAGE ===
+            renderListenMatch(container) {
+                // Pick 1 correct word, 3 wrong words
+                const shuffled = shuffle([...vocabulary]);
+                const correctWord = shuffled[0];
+                const options = shuffle(shuffled.slice(0, 4));
+                this.currentGameData = correctWord;
+
+                let optionsHtml = options.map((opt, index) => `
+                    <div id="img-opt-${index}" onclick="App.checkListenMatch('${opt.en}', ${index})" class="cursor-pointer bg-white p-2 rounded-2xl shadow-md border-4 border-transparent hover:border-blue-300 hover:scale-105 transition-all">
+                        <img src="${opt.img}" class="w-full aspect-square object-cover rounded-xl pointer-events-none" alt="Option">
+                    </div>
+                `).join('');
+
+                container.innerHTML = `
+                    <div class="text-center max-w-4xl mx-auto">
+                        <h2 class="text-3xl font-bold text-indigo-800 mb-6 bg-white py-4 px-6 rounded-2xl shadow-sm inline-block">
+                            Listen and select the correct picture!
+                        </h2>
+                        
+                        <div class="mb-10">
+                            <button onclick="playAudio('${correctWord.en}')" class="bg-blue-500 hover:bg-blue-600 text-white rounded-full p-8 shadow-xl hover:scale-110 transition-transform animate-pulse">
+                                ${getAudioIcon("w-16 h-16")}
+                                <span class="block mt-2 font-bold text-lg">Click to Listen</span>
+                            </button>
+                        </div>
+
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6" id="listen-options">
+                            ${optionsHtml}
+                        </div>
+
+                        <div id="listen-feedback" class="mt-8 text-2xl font-bold h-12"></div>
+                        <button onclick="App.setMode('listenMatch')" id="listen-next" class="hidden mx-auto mt-4 bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-2xl shadow-lg text-xl animate-pop">Play Again</button>
+                    </div>
+                `;
+                // Play sound immediately on load
+                setTimeout(() => playAudio(correctWord.en), 500);
+            },
+            checkListenMatch(selectedWord, index) {
+                const el = document.getElementById(`img-opt-${index}`);
+                const feedback = document.getElementById('listen-feedback');
+                const isCorrect = selectedWord === this.currentGameData.en;
+                
+                if (isCorrect) {
+                    el.classList.add('border-green-500', 'bg-green-100');
+                    el.classList.remove('border-transparent');
+                    feedback.innerHTML = `<span class="text-green-600">🎉 Correct! It's ${this.currentGameData.en}!</span>`;
+                    playAudio("Correct! " + this.currentGameData.en);
+                    // Lock board
+                    document.getElementById('listen-options').classList.add('disabled-card');
+                    document.getElementById('listen-next').classList.remove('hidden');
+                } else {
+                    el.classList.add('border-red-500', 'animate-shake', 'opacity-50');
+                    el.classList.remove('border-transparent', 'hover:border-blue-300', 'hover:scale-105');
+                    feedback.innerHTML = `<span class="text-red-500">Try again!</span>`;
+                    playAudio("Try again");
+                }
+            },
+
+            // === MODE 3: READ & MATCH (Find Word) ===
+            renderReadMatch(container) {
+                const shuffled = shuffle([...vocabulary]);
+                const correctWord = shuffled[0];
+                const options = shuffle(shuffled.slice(0, 4));
+                this.currentGameData = correctWord;
+
+                let optionsHtml = options.map((opt, index) => `
+                    <button id="word-opt-${index}" onclick="App.checkReadMatch('${opt.en}', ${index})" class="bg-white hover:bg-indigo-50 text-indigo-900 border-4 border-indigo-200 text-3xl font-bold py-6 px-4 rounded-2xl shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 w-full">
+                        ${opt.en}
+                    </button>
+                `).join('');
+
+                container.innerHTML = `
+                    <div class="flex flex-col md:flex-row gap-8 items-center justify-center max-w-4xl mx-auto">
+                        
+                        <!-- Left Side: Image & Audio (if they need help) -->
+                        <div class="bg-white p-6 rounded-3xl shadow-xl w-full md:w-1/2 flex flex-col items-center">
+                            <h2 class="text-2xl font-bold text-gray-600 mb-4">What is this?</h2>
+                            <img src="${correctWord.img}" alt="Target Image" class="w-full h-auto aspect-square object-cover rounded-xl shadow-inner mb-4 border-2 border-gray-100">
+                            <button onclick="playAudio('${correctWord.en}')" class="flex items-center gap-2 bg-blue-100 text-blue-700 hover:bg-blue-200 px-4 py-2 rounded-xl font-semibold transition-colors">
+                                ${getAudioIcon("w-6 h-6")} Hear Word
+                            </button>
+                        </div>
+
+                        <!-- Right Side: Word Options -->
+                        <div class="w-full md:w-1/2 flex flex-col gap-4" id="read-options">
+                            ${optionsHtml}
+                        </div>
+                    </div>
+                    <div class="text-center mt-8">
+                        <div id="read-feedback" class="text-3xl font-bold h-12 mb-4"></div>
+                        <button onclick="App.setMode('readMatch')" id="read-next" class="hidden mx-auto bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-2xl shadow-lg text-xl animate-pop">Next Word</button>
+                    </div>
+                `;
+            },
+            checkReadMatch(selectedWord, index) {
+                const el = document.getElementById(`word-opt-${index}`);
+                const feedback = document.getElementById('read-feedback');
+                const isCorrect = selectedWord === this.currentGameData.en;
+                
+                if (isCorrect) {
+                    el.classList.replace('border-indigo-200', 'border-green-500');
+                    el.classList.replace('bg-white', 'bg-green-100');
+                    el.classList.replace('text-indigo-900', 'text-green-800');
+                    feedback.innerHTML = `<span class="text-green-600">🌟 Excellent!</span>`;
+                    playAudio(this.currentGameData.en);
+                    document.getElementById('read-options').classList.add('disabled-card');
+                    document.getElementById('read-next').classList.remove('hidden');
+                } else {
+                    el.classList.replace('border-indigo-200', 'border-red-400');
+                    el.classList.replace('text-indigo-900', 'text-red-500');
+                    el.classList.add('animate-shake', 'opacity-50');
+                    feedback.innerHTML = `<span class="text-red-500">Oops! Not quite.</span>`;
+                }
+            },
+
+            // === MODE 4: AMHARIC VS ENGLISH MATCHING ===
+            renderAmharicMatch(container) {
+                // Select 5 random pairs
+                const selectedPairs = shuffle([...vocabulary]).slice(0, 5);
+                this.matchState.matchesLeft = 5;
+                this.matchState.selectedEn = null;
+                this.matchState.selectedAm = null;
+
+                const enWords = shuffle([...selectedPairs]);
+                const amWords = shuffle([...selectedPairs]);
+
+                let enHtml = enWords.map(w => `
+                    <div id="en-${w.en}" onclick="App.selectMatchEn('${w.en}')" class="match-en cursor-pointer bg-white hover:bg-gray-50 border-4 border-gray-200 text-2xl font-bold text-indigo-900 p-4 rounded-xl shadow-sm transition-all flex items-center justify-between">
+                        ${w.en}
+                        <button onclick="event.stopPropagation(); playAudio('${w.en}')" class="text-blue-500 hover:text-blue-700">
+                            ${getAudioIcon("w-6 h-6")}
+                        </button>
+                    </div>
+                `).join('');
+
+                let amHtml = amWords.map(w => `
+                    <div id="am-${w.en}" onclick="App.selectMatchAm('${w.en}')" class="match-am cursor-pointer bg-white hover:bg-gray-50 border-4 border-gray-200 text-2xl font-bold text-orange-800 p-4 rounded-xl shadow-sm transition-all text-center">
+                        ${w.am}
+                    </div>
+                `).join('');
+
+                container.innerHTML = `
+                    <div class="max-w-4xl mx-auto">
+                        <div class="bg-indigo-600 text-white p-4 rounded-2xl mb-8 shadow-md text-center animate-pop">
+                            <h2 class="text-2xl font-bold">Match English to Amharic!</h2>
+                            <p class="text-indigo-100">Click a word on the left, then its match on the right.</p>
+                        </div>
+
+                        <div class="flex flex-col md:flex-row gap-6 md:gap-12 justify-center">
+                            <!-- English Column -->
+                            <div class="flex-1 flex flex-col gap-4" id="col-en">
+                                <h3 class="text-center font-bold text-gray-500 uppercase tracking-widest mb-2">English</h3>
+                                ${enHtml}
+                            </div>
+                            
+                            <!-- Amharic Column -->
+                            <div class="flex-1 flex flex-col gap-4" id="col-am">
+                                <h3 class="text-center font-bold text-gray-500 uppercase tracking-widest mb-2">Amharic</h3>
+                                ${amHtml}
+                            </div>
+                        </div>
+
+                        <div class="text-center mt-10">
+                            <div id="match-feedback" class="text-2xl font-bold h-8 mb-4 text-indigo-700"></div>
+                            <button onclick="App.setMode('amharicMatch')" id="match-reset" class="hidden mx-auto bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-2xl shadow-lg text-xl animate-pop">Play Again</button>
+                        </div>
+                    </div>
+                `;
+            },
+            
+            selectMatchEn(word) {
+                // Clear previous selection visually
+                document.querySelectorAll('.match-en').forEach(el => {
+                    if(!el.classList.contains('match-correct')) {
+                        el.classList.remove('match-selected');
+                    }
+                });
+                
+                this.matchState.selectedEn = word;
+                document.getElementById(`en-${word}`).classList.add('match-selected');
+                this.checkMatchPair();
+            },
+
+            selectMatchAm(word) {
+                document.querySelectorAll('.match-am').forEach(el => {
+                    if(!el.classList.contains('match-correct')) {
+                        el.classList.remove('match-selected');
+                    }
+                });
+                
+                this.matchState.selectedAm = word;
+                document.getElementById(`am-${word}`).classList.add('match-selected');
+                this.checkMatchPair();
+            },
+
+            checkMatchPair() {
+                if (this.matchState.selectedEn && this.matchState.selectedAm) {
+                    const enEl = document.getElementById(`en-${this.matchState.selectedEn}`);
+                    const amEl = document.getElementById(`am-${this.matchState.selectedAm}`);
+                    const feedback = document.getElementById('match-feedback');
+
+                    if (this.matchState.selectedEn === this.matchState.selectedAm) {
+                        // Match Correct
+                        enEl.classList.remove('match-selected');
+                        amEl.classList.remove('match-selected');
+                        enEl.classList.add('match-correct');
+                        amEl.classList.add('match-correct');
+                        
+                        playAudio("Good! " + this.matchState.selectedEn);
+                        feedback.innerText = "Great Match!";
+                        
+                        this.matchState.matchesLeft--;
+                        
+                        if (this.matchState.matchesLeft === 0) {
+                            feedback.innerHTML = `<span class="text-green-600 text-3xl">🎉 All matched perfectly! 🎉</span>`;
+                            document.getElementById('match-reset').classList.remove('hidden');
+                        }
+                    } else {
+                        // Match Wrong
+                        enEl.classList.add('match-wrong', 'animate-shake');
+                        amEl.classList.add('match-wrong', 'animate-shake');
+                        feedback.innerText = "Not quite. Try again!";
+                        
+                        setTimeout(() => {
+                            enEl.classList.remove('match-selected', 'match-wrong', 'animate-shake');
+                            amEl.classList.remove('match-selected', 'match-wrong', 'animate-shake');
+                            feedback.innerText = "";
+                        }, 800);
+                    }
+                    
+                    // Reset selection state for next pair
+                    this.matchState.selectedEn = null;
+                    this.matchState.selectedAm = null;
+                }
+            }
+        };
+
+        // Initialize App on load
+        window.onload = () => App.init();
+    </script>
+</body>
+</html>
